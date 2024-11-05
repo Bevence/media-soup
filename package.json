@@ -4,9 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@httptoolkit/httpolyglot": "^2.2.2",
+    "express": "^4.21.1",
+    "mediasoup": "^3.14.16",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "nodemon": "^3.1.7"
+  }
 }
