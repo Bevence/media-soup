@@ -6,6 +6,8 @@ const socket = io("https://192.168.1.76:3000/media-soup");
 let params = {};
 let routerRtpCapabilities;
 let device;
+let producerTransport;
+let consumerTransport;
 
 socket.on("connection-success", ({ socketId }) => {
   console.log("connection success on id", socketId);
@@ -63,10 +65,29 @@ const createDevice = async () => {
   }
 };
 
+const createSendTransport = () => {
+  socket.emit(
+    "create:webRtcTransport",
+    { sender: true },
+    async ({ params }) => {
+      if (params.error) {
+        console.log(params.error);
+        return;
+      }
+      console.log("params from server producer", params);
+
+      producerTransport = await device.createSendTransport(params);
+
+      producerTransport.on("connect", () => {});
+      producerTransport.on("produce", () => {});
+    }
+  );
+};
+
 btnLocalVideo.addEventListener("click", getLocalStream);
 btnRtpCapabilities.addEventListener("click", getRtpCapabilities);
 btnDevice.addEventListener("click", createDevice);
-// btnCreateSendTransport.addEventListener('click', createSendTransport)
+btnCreateSendTransport.addEventListener("click", createSendTransport);
 // btnConnectSendTransport.addEventListener('click', connectSendTransport)
 // btnRecvSendTransport.addEventListener('click', createRecvTransport)
 // btnConnectRecvTransport.addEventListener('click', connectRecvTransport)

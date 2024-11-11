@@ -4,12 +4,19 @@ import path from "path";
 import { Server } from "socket.io";
 import https from "https";
 import * as mediasoup from "mediasoup";
-import { Router, RtpCodecCapability, Worker } from "mediasoup/node/lib/types";
+import {
+  Router,
+  RtpCodecCapability,
+  Transport,
+  Worker,
+} from "mediasoup/node/lib/types";
 
 const app = express();
 
 let worker: Worker;
 let router: Router;
+let producerTransport: Transport;
+let consumerTransport: Transport;
 const mediaCodecs: RtpCodecCapability[] = [
   {
     kind: "audio",
@@ -74,4 +81,55 @@ peers.on("connection", async (socket) => {
 
     cb({ rtpCapabilities });
   });
+
+  socket.on("create:webRtcTransport", async ({ sender }, cb) => {
+    if (sender) {
+      producerTransport = await createWebRtcTransport(cb);
+    } else {
+      consumerTransport = await createWebRtcTransport(cb);
+    }
+  });
 });
+
+const createWebRtcTransport = async (cb: Function) => {
+  try {
+    let transport = await router.createWebRtcTransport({
+      listenInfos: [
+        {
+          ip: "0.0.0.0",
+          announcedAddress: "192.168.1.76",
+          protocol: "udp",
+        },
+      ],
+    });
+
+    console.log("Transport created --> ", transport.id);
+
+    transport.on("dtlsstatechange", () => {
+      transport.close();
+    });
+
+    transport.on("@close", () => {
+      console.log("Transport closed...");
+    });
+
+    cb({
+      params: {
+        id: transport.id,
+        iceCandidates: transport.iceCandidates,
+        iceParameters: transport.iceParameters,
+        dtlsParameters: transport.dtlsParameters,
+      },
+    });
+
+    return transport;
+  } catch (error) {
+    console.log("Error while creating web rtc transport", error);
+    cb({
+      params: {
+        error,
+      },
+    });
+    throw Error;
+  }
+};
