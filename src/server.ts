@@ -69,5 +69,9 @@ peers.on("connection", async (socket) => {
   // Create router
   router = await worker.createRouter({ mediaCodecs, appData });
 
-  // console.log("router.get", router.rtpCapabilities);
+  socket.on("get:rtpCapabilities", (cb) => {
+    const rtpCapabilities = router.rtpCapabilities;
+
+    cb({ rtpCapabilities });
+  });
 });
